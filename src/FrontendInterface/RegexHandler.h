@@ -46,7 +46,7 @@ class RegexHandler {
       {REGEX(RUN_CMD), &RegexHandler::runHandler},
       {REGEX(OPEN_TABLE_CMD), &RegexHandler::openHandler},
       {REGEX(CLOSE_TABLE_CMD), &RegexHandler::closeHandler},
-      {REGEX(CREATE_TABLE_CMD), &RegexHandler::createTableHandler},
+    {REGEX(CREATE_TABLE_CMD), &RegexHandler::createTableHandler},
       {REGEX(DROP_TABLE_CMD), &RegexHandler::dropTableHandler},
       {REGEX(CREATE_INDEX_CMD), &RegexHandler::createIndexHandler},
       {REGEX(DROP_INDEX_CMD), &RegexHandler::dropIndexHandler},
