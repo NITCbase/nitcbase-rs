@@ -46,6 +46,7 @@ pub const RELCAT_SLOTNUM_FOR_ATTRCAT: usize = 1; // Slot number for attribute ca
 pub const INVALID_BLOCKNUM: i32 = -1; // Indicates the Block number as Invalid.
 
 #[allow(non_camel_case_types)]
+#[derive(Clone)]
 pub enum AttributeType {
     NUMBER, // for an integer or a floating point number 0
     STRING, // 1
@@ -113,10 +114,10 @@ pub enum AttrCatFieldIndex {
 
 impl AttrCatFieldIndex {
     pub fn id(&self) -> usize {
-        match &self {
+        match self {
             AttrCatFieldIndex::ATTRCAT_REL_NAME_INDEX => 0,
             AttrCatFieldIndex::ATTRCAT_ATTR_TYPE_INDEX => 1,
-            AttrCatFieldIndex::ATTRCAT_ATTR_TYPE_INDEX => 2,
+            AttrCatFieldIndex::ATTRCAT_ATTR_NAME_INDEX => 2,
             AttrCatFieldIndex::ATTRCAT_PRIMARY_FLAG_INDEX => 3,
             AttrCatFieldIndex::ATTRCAT_ROOT_BLOCK_INDEX => 4,
             AttrCatFieldIndex::ATTRCAT_OFFSET_INDEX => 5,
@@ -149,6 +150,46 @@ pub enum ErrorType {
     NOTFOUND,              // Search for requested record unsuccessful
     BLOCKNOTINBUFFER,      // Block not found in buffer
     INDEX_BLOCKS_RELEASED, // Due to insufficient disk space, index blocks have been released from the disk
+    CAPTURE_FAILURE,
+    IO_ERROR(std::io::Error), //
+}
+impl ErrorType {
+    pub fn print_error(&self) {
+        match &self {
+            ErrorType::CAPTURE_FAILURE => println!("Error: Regex Capture error"),
+            ErrorType::FAILURE => println!("Error: Command Failed"),
+            ErrorType::EXIT => println!("Error: Exit"),
+            ErrorType::OUTOFBOUND => println!("Error: Out of bound"),
+            ErrorType::FREESLOT => println!("Error: Free slot"),
+            ErrorType::NOINDEX => println!("Error: No index"),
+            ErrorType::DISKFULL => println!("Error: Insufficient space in disk"),
+            ErrorType::INVALIDBLOCK => println!("Error: Invalid block"),
+            ErrorType::RELNOTEXIST => println!("Error: Relation does not exist"),
+            ErrorType::RELEXIST => println!("Error: Relation already exists"),
+            ErrorType::ATTRNOTEXIST => println!("Error: Attribute does not exist"),
+            ErrorType::ATTREXIST => println!("Error: Attribute already exists"),
+            ErrorType::CACHEFULL => println!("Error: Cache is full"),
+            ErrorType::RELNOTOPEN => println!("Error: Relation is not open"),
+            ErrorType::NATTRMISMATCH => println!("Error: Mismatch in number of attributes"),
+            ErrorType::DUPLICATEATTR => println!("Error: Duplicate attributes found"),
+            ErrorType::RELOPEN => println!("Error: Relation is open"),
+            ErrorType::ATTRTYPEMISMATCH => println!("Error: Mismatch in attribute type"),
+            ErrorType::INVALID => println!("Error: Invalid index or argument"),
+            ErrorType::MAXRELATIONS => {
+                println!("Error: Maximum number of relations already present")
+            }
+            ErrorType::MAXATTRS => {
+                println!("Error: Maximum number of attributes allowed for a relation is 125")
+            }
+            ErrorType::NOTPERMITTED => println!("Error: This operation is not permitted"),
+            ErrorType::NOTFOUND => println!("Error: Search for requested record unsuccessful"),
+            ErrorType::BLOCKNOTINBUFFER => println!("Error: Block not found in buffer"),
+            ErrorType::INDEX_BLOCKS_RELEASED => {
+                println!("Warning: Operation succeeded, but some indexes had to be dropped")
+            }
+            ErrorType::IO_ERROR(io_error) => println!("I/O Error: {}", io_error),
+        }
+    }
 }
 
 pub static TEMP: &str = ".temp"; // Used; for internal purposes;

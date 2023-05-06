@@ -52,63 +52,70 @@ pub mod RegexHandler {
                 .unwrap()
         }};
     }
-    type HandlerFunction<'a> = fn(&mut RegexHandler<'a>) -> Result<(), ErrorType>;
-
-    pub struct RegexHandler<'a> {
-        m: Option<regex::Captures<'a>>,
-        handlers: Vec<(Regex, HandlerFunction<'a>)>,
+    type HandlerFunction<'a> = fn(&'a RegexHandler<'a>) -> Result<(), ErrorType>;
+    type HandlerFunctionMut<'a> = fn(&'a mut RegexHandler<'a>) -> Result<(), ErrorType>;
+    enum HandlerType<'a> {
+        Ref(HandlerFunction<'a>),
+        MutRef(HandlerFunctionMut<'a>),
     }
 
-    impl RegexHandler<'_> {
+    pub struct RegexHandler<'a> {
+        m: Vec<String>,
+        handlers: Vec<(Regex, HandlerType<'a>)>,
+    }
+
+    impl<'a> RegexHandler<'_> {
         fn new() -> Self {
-            let handlers: Vec<(Regex, HandlerFunction)> = vec![
-                (regex!(HELP_CMD), Self::helpHandler),
-                (regex!(EXIT_CMD), Self::exitHandler),
-                (regex!(ECHO_CMD), Self::echoHandler),
-                (regex!(RUN_CMD), Self::runHandler),
-                (regex!(OPEN_TABLE_CMD), Self::openHandler),
-                (regex!(CLOSE_TABLE_CMD), Self::closeHandler),
-                (regex!(CREATE_TABLE_CMD), Self::createTableHandler),
-                (regex!(DROP_TABLE_CMD), Self::dropTableHandler),
-                (regex!(CREATE_INDEX_CMD), Self::createIndexHandler),
-                (regex!(DROP_INDEX_CMD), Self::dropIndexHandler),
-                (regex!(RENAME_TABLE_CMD), Self::renameTableHandler),
-                (regex!(RENAME_COLUMN_CMD), Self::renameColumnHandler),
-                (regex!(INSERT_SINGLE_CMD), Self::insertSingleHandler),
-                (regex!(INSERT_MULTIPLE_CMD), Self::insertFromFileHandler),
-                (regex!(SELECT_FROM_CMD), Self::selectFromHandler),
-                (regex!(SELECT_FROM_WHERE_CMD), Self::selectFromWhereHandler),
-                (regex!(SELECT_ATTR_FROM_CMD), Self::selectAttrFromHandler),
+            let handlers: Vec<(Regex, HandlerType)> = vec![
+                (regex!(HELP_CMD), HandlerType::Ref(Self::helpHandler)),
+                (regex!(EXIT_CMD), HandlerType::Ref(Self::exitHandler)),
+                (regex!(ECHO_CMD), HandlerType::Ref(Self::echoHandler)),
+                (regex!(RUN_CMD), HandlerType::MutRef(Self::runHandler)),
+                (regex!(OPEN_TABLE_CMD), HandlerType::Ref(Self::openHandler)),
                 (
-                    regex!(SELECT_ATTR_FROM_WHERE_CMD),
-                    Self::selectAttrFromWhereHandler,
+                    regex!(CLOSE_TABLE_CMD),
+                    HandlerType::Ref(Self::closeHandler),
                 ),
-                (regex!(SELECT_FROM_JOIN_CMD), Self::selectFromJoinHandler),
                 (
-                    regex!(SELECT_ATTR_FROM_JOIN_CMD),
-                    Self::selectAttrFromJoinHandler,
+                    regex!(CREATE_TABLE_CMD),
+                    HandlerType::Ref(Self::createTableHandler),
                 ),
-                (regex!(CUSTOM_CMD), Self::customFunctionHandler),
+                (
+                    regex!(DROP_TABLE_CMD),
+                    HandlerType::Ref(Self::dropTableHandler),
+                ),
+                (
+                    regex!(CREATE_INDEX_CMD),
+                    HandlerType::Ref(Self::createIndexHandler),
+                ),
+                //(regex!(DROP_INDEX_CMD), HandlerType::Ref(Self::dropIndexHandler)),
+                //(regex!(RENAME_TABLE_CMD), HandlerType::Ref(Self::renameTableHandler)),
+                //(regex!(RENAME_COLUMN_CMD), HandlerType::Ref(Self::renameColumnHandler)),
+                //(regex!(INSERT_SINGLE_CMD), HandlerType::Ref(Self::insertSingleHandler)),
+                //(regex!(INSERT_MULTIPLE_CMD), HandlerType::Ref(Self::insertFromFileHandler)),
+                //(regex!(SELECT_FROM_CMD), HandlerType::Ref(Self::selectFromHandler)),
+                //(regex!(SELECT_FROM_WHERE_CMD), HandlerType::Ref(Self::selectFromWhereHandler)),
+                //(regex!(SELECT_ATTR_FROM_CMD), HandlerType::Ref(Self::selectAttrFromHandler)),
+                //(
+                //    regex!(SELECT_ATTR_FROM_WHERE_CMD),
+                //    HandlerType::Ref(Self::selectAttrFromWhereHandler,)
+                //),
+                //(regex!(SELECT_FROM_JOIN_CMD), HandlerType::Ref(Self::selectFromJoinHandler)),
+                //(
+                //    regex!(SELECT_ATTR_FROM_JOIN_CMD),
+                //    HandlerType::Ref(Self::selectAttrFromJoinHandler,)
+                //),
+                //(regex!(CUSTOM_CMD), HandlerType::Ref(Self::customFunctionHandler)),
             ];
-            RegexHandler { m: None, handlers }
-        }
-        #[allow(non_snake_case)]
-        fn helpHandler(&mut self) -> Result<(), ErrorType> {
-            printHelp();
-            Ok(())
-        }
-        fn exitHandler(&mut self) -> Result<(), ErrorType> {
-            Err(ErrorType::EXIT)
-        }
-        fn echoHandler(&mut self) -> Result<(), ErrorType> {
-            let message: &str = &self.m.unwrap()[0];
-            println!("{}", message);
-            Ok(())
+            RegexHandler {
+                m: vec![],
+                handlers,
+            }
         }
         fn runHandler(&mut self) -> Result<(), ErrorType> {
-            let fileName: &str = &self.m.unwrap()[1];
-            const filePath: &str = BATCH_FILES_PATH;
-            let mut commands_file = match OpenOptions::new()
+            let fileName: &str = &self.m[1];
+            let filePath: &str = BATCH_FILES_PATH;
+            let commands_file = match OpenOptions::new()
                 .read(true)
                 .open(filePath.to_string() + fileName)
             {
@@ -119,53 +126,175 @@ pub mod RegexHandler {
                 }
             };
 
-            let mut command = String::new();
             let mut line_number = 1;
             let reader = BufReader::new(commands_file);
             for line in reader.lines() {
-                let ret = self.handle(command.trim());
-                if ret == ErrorType::EXIT {
-                    break;
-                } else if ret != SUCCESS {
-                    println!("Executed up till line {}. Error at line number {}. Subsequent lines will be skipped.", line_number - 1, line_number);
-                    break;
-                }
+                let ret = Self::handle(self, &line.map_err(|e| ErrorType::IO_ERROR(e))?);
+                match ret {
+                    Ok(_) => {}
+                    Err(ErrorType::EXIT) => return ret,
+                    _ => {
+                        println!("Executed up till line {}\n. Error at line number {}. Subsequent lines will be skipped.", line_number - 1, line_number);
+                        return ret;
+                    }
+                };
                 line_number += 1;
-                command.clear();
+            }
+            //std::mem::drop(commands_file);
+            Ok(())
+        }
+        fn handle(&mut self, command: &String) -> Result<(), ErrorType> {
+            for (test_command, handler) in self.handlers.iter() {
+                if test_command.is_match(&command) {
+                    let caps = test_command.captures(command.as_str()).unwrap();
+                    self.m.clear();
+                    for i in 0..caps.len() {
+                        self.m.push(String::from(&caps[i]));
+                    }
+
+                    let status = match handler {
+                        HandlerType::Ref(func) => func(&*self),
+                        HandlerType::MutRef(func) => func(&mut *self),
+                    };
+                    match status {
+                        Ok(_) | Err(ErrorType::EXIT) => {
+                            return status;
+                        }
+                        Err(e) => {
+                            e.print_error();
+                            return Err(ErrorType::FAILURE);
+                        }
+                    }
+                }
             }
             Ok(())
         }
-        fn openHandler(&mut self) -> Result<(), ErrorType> {
-            let mut rel_name: [char; ATTR_SIZE] = ['\0'; ATTR_SIZE];
-            Self::attrToTruncatedArray(self.m[1], &mut rel_name);
+        fn helpHandler(&self) -> Result<(), ErrorType> {
+            printHelp();
+            Ok(())
+        }
+        fn exitHandler(&self) -> Result<(), ErrorType> {
+            Err(ErrorType::EXIT)
+        }
+        fn echoHandler(&self) -> Result<(), ErrorType> {
+            let messg = &self.m[1];
+            println!("{}", messg);
+            Ok(())
+        }
+        fn openHandler(&self) -> Result<(), ErrorType> {
+            let mut rel_name: String = String::from('\0'.to_string().repeat(16));
+            let st = &self.m[1];
+            Self::attrToTruncatedArray(&st, &mut rel_name);
             let ret = Frontend::open_table(&rel_name);
             match ret {
                 Ok(_) => {
-                    println!("Relation {} opened successfully", rel_name.iter().collect());
+                    println!("Relation {} opened successfully", rel_name);
                     ret
                 }
                 Err(_) => ret,
             }
         }
-        fn attrToTruncatedArray(s: &str, relname: &str) {}
-        fn closeHandler(&mut self) -> Result<(), ErrorType> {}
-        fn createTableHandler(&mut self) -> Result<(), ErrorType> {}
-        fn dropTableHandler(&mut self) -> Result<(), ErrorType> {}
-        fn createIndexHandler(&mut self) -> Result<(), ErrorType> {}
-        fn dropIndexHandler(&mut self) -> Result<(), ErrorType> {}
-        fn renameTableHandler(&mut self) -> Result<(), ErrorType> {}
-        fn renameColumnHandler(&mut self) -> Result<(), ErrorType> {}
-        fn insertSingleHandler(&mut self) -> Result<(), ErrorType> {}
-        fn insertFromFileHandler(&mut self) -> Result<(), ErrorType> {}
-        fn selectFromHandler(&mut self) -> Result<(), ErrorType> {}
-        fn selectFromFileHandler(&mut self) -> Result<(), ErrorType> {}
-        fn selectFromWhereHandler(&mut self) -> Result<(), ErrorType> {}
-        fn selectAttrFromHandler(&mut self) -> Result<(), ErrorType> {}
-        fn selectAttrFromWhereHandler(&mut self) -> Result<(), ErrorType> {}
-        fn selectAttrFromJoinHandler(&mut self) -> Result<(), ErrorType> {}
-        fn selectFromJoinHandler(&mut self) -> Result<(), ErrorType> {}
-        fn customFunctionHandler(&mut self) -> Result<(), ErrorType> {}
-        fn handler() -> Result<(), ErrorType> {}
+        fn attrToTruncatedArray(nameString: &str, nameArray: &mut String) {
+            *nameArray = String::from(&nameString[0..ATTR_SIZE - 1]);
+            if nameString.len() >= ATTR_SIZE {
+                println!("(warning: '{}' truncated to '{}')", nameString, nameArray);
+            }
+        }
+        fn closeHandler(&self) -> Result<(), ErrorType> {
+            let mut relName: String = String::from('\0').to_string().repeat(16);
+            let st = &self.m[1];
+            Self::attrToTruncatedArray(st, &mut relName);
+
+            let ret = Frontend::close_table(&relName);
+            match ret {
+                Ok(_) => {
+                    println!("Relation {} opened successfully", relName);
+                    ret
+                }
+                Err(_) => ret,
+            }
+        }
+        fn extractTokens(input: &str) -> Vec<&str> {
+            let re = Regex::new(r"\s*,\s*|\s+").unwrap();
+            let tokens: Vec<&str> = re.split(input).collect();
+            tokens
+        }
+        fn createTableHandler(&self) -> Result<(), ErrorType> {
+            let mut relName: String = String::from('\0').to_string().repeat(16);
+            Self::attrToTruncatedArray(self.m[1].as_ref(), &mut relName);
+
+            let mut words: Vec<&str> = Self::extractTokens(&self.m[2]);
+            let attrCount = words.len() / 2;
+            if attrCount > 125 {
+                return Err(ErrorType::MAXATTRS);
+            }
+
+            let mut attrNames: Vec<String> =
+                vec![String::from('\0'.to_string().repeat(ATTR_SIZE)); attrCount];
+            let mut attrTypes: Vec<AttributeType> = vec![AttributeType::NUMBER; attrCount];
+
+            let mut k = 0;
+            for i in 0..attrCount {
+                Self::attrToTruncatedArray(words[k], &mut attrNames[i]);
+                if words[k + 1] == "STR" {
+                    attrTypes[i] = AttributeType::STRING;
+                } else if words[k + 1] == "NUM" {
+                    attrTypes[i] = AttributeType::NUMBER;
+                }
+                k += 2;
+            }
+
+            let ret = Frontend::create_table(&relName, attrCount, &attrNames, &attrTypes);
+            match ret {
+                Ok(_) => {
+                    println!("Relation {} created successfully", relName);
+                    ret
+                }
+                Err(_) => ret,
+            }
+        }
+        fn dropTableHandler(&self) -> Result<(), ErrorType> {
+            let mut relName: String = String::from('\0').to_string().repeat(16);
+            Self::attrToTruncatedArray(&self.m[1], &mut relName);
+
+            let ret = Frontend::drop_table(&relName);
+            match ret {
+                Ok(_) => {
+                    println!("Relation {} deleted successfully", relName);
+                    ret
+                }
+                Err(_) => ret,
+            }
+        }
+        fn createIndexHandler(&self) -> Result<(), ErrorType> {
+            let mut relName: String = String::from('\0').to_string().repeat(16);
+            let mut attrName: String = String::from('\0').to_string().repeat(16);
+            Self::attrToTruncatedArray(&self.m[1], &mut relName);
+            Self::attrToTruncatedArray(&self.m[2], &mut attrName);
+
+            let ret = Frontend::create_index(&relName, &attrName);
+            match ret {
+                Ok(_) => {
+                    println!("Index created successfully");
+                    ret
+                }
+                Err(_) => ret,
+            }
+        }
+        //fn dropIndexHandler(&self) -> Result<(), ErrorType> {}
+        //fn renameTableHandler(&self) -> Result<(), ErrorType> {}
+        //fn renameColumnHandler(&self) -> Result<(), ErrorType> {}
+        //fn insertSingleHandler(&self) -> Result<(), ErrorType> {}
+        //fn insertFromFileHandler(&self) -> Result<(), ErrorType> {}
+        //fn selectFromHandler(&self) -> Result<(), ErrorType> {}
+        //fn selectFromFileHandler(&self) -> Result<(), ErrorType> {}
+        //fn selectFromWhereHandler(&self) -> Result<(), ErrorType> {}
+        //fn selectAttrFromHandler(&self) -> Result<(), ErrorType> {}
+        //fn selectAttrFromWhereHandler(&self) -> Result<(), ErrorType> {}
+        //fn selectAttrFromJoinHandler(&self) -> Result<(), ErrorType> {}
+        //fn selectFromJoinHandler(&self) -> Result<(), ErrorType> {}
+        //fn customFunctionHandler(&self) -> Result<(), ErrorType> {}
+        //fn handler() -> Result<(), ErrorType> {}
     }
 
     pub fn printHelp() {

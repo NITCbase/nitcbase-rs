@@ -2,58 +2,49 @@ pub mod Frontend {
     use crate::define::*;
     use std::os::raw::c_char;
     pub fn create_table(
-        relname: *mut c_char,
-        no_attrs: i32,
-        attributes: *mut [c_char; ATTR_SIZE],
-        type_attrs: *mut i32,
+        relname: &String,
+        no_attrs: usize,
+        attributes: &Vec<String>,
+        type_attrs: &Vec<AttributeType>,
     ) -> Result<(), ErrorType> {
         Ok(())
     }
 
-    pub fn drop_table(relname: &[char; ATTR_SIZE]) -> Result<(), ErrorType> {
+    pub fn drop_table(relname: &String) -> Result<(), ErrorType> {
         Ok(())
     }
 
-    pub fn open_table(relname: &[char; ATTR_SIZE]) -> Result<(), ErrorType> {
+    pub fn open_table(relname: &String) -> Result<(), ErrorType> {
         Ok(())
     }
 
-    pub fn close_table(relname: &[char; ATTR_SIZE]) -> Result<(), ErrorType> {
+    pub fn close_table(relname: &String) -> Result<(), ErrorType> {
         Ok(())
     }
 
-    pub fn create_index(
-        relname: &[char; ATTR_SIZE],
-        attrname: &[char; ATTR_SIZE],
-    ) -> Result<(), ErrorType> {
+    pub fn create_index(relname: &String, attrname: &String) -> Result<(), ErrorType> {
         Ok(())
     }
 
-    pub fn drop_index(
-        relname: &[char; ATTR_SIZE],
-        attrname: &[char; ATTR_SIZE],
-    ) -> Result<(), ErrorType> {
+    pub fn drop_index(relname: &String, attrname: &String) -> Result<(), ErrorType> {
         Ok(())
     }
 
-    pub fn alter_table_rename(
-        relname_from: &[char; ATTR_SIZE],
-        relname_to: &[char; ATTR_SIZE],
-    ) -> Result<(), ErrorType> {
+    pub fn alter_table_rename(relname_from: &String, relname_to: &String) -> Result<(), ErrorType> {
         Ok(())
     }
 
     pub fn alter_table_rename_column(
-        relname: &[char; ATTR_SIZE],
-        attrname_from: &[char; ATTR_SIZE],
-        attrname_to: &[char; ATTR_SIZE],
+        relname: &String,
+        attrname_from: &String,
+        attrname_to: &String,
     ) -> Result<(), ErrorType> {
         Ok(())
     }
 
     // DML
     pub fn insert_into_table_values(
-        relname: &[char; ATTR_SIZE],
+        relname: &String,
         attr_count: i32,
         attr_values: *mut [c_char; ATTR_SIZE],
     ) -> Result<(), ErrorType> {
@@ -61,15 +52,15 @@ pub mod Frontend {
     }
 
     pub fn select_from_table(
-        relname_source: &[char; ATTR_SIZE],
-        relname_target: &[char; ATTR_SIZE],
+        relname_source: &String,
+        relname_target: &String,
     ) -> Result<(), ErrorType> {
         Ok(())
     }
 
     pub fn select_attrlist_from_table(
-        relname_source: &[char; ATTR_SIZE],
-        relname_target: &[char; ATTR_SIZE],
+        relname_source: &String,
+        relname_target: &String,
         attr_count: i32,
         attr_list: *mut [c_char; ATTR_SIZE],
     ) -> Result<(), ErrorType> {
@@ -77,43 +68,43 @@ pub mod Frontend {
     }
 
     pub fn select_from_table_where(
-        relname_source: &[char; ATTR_SIZE],
-        relname_target: &[char; ATTR_SIZE],
-        attribute: &[char; ATTR_SIZE],
+        relname_source: &String,
+        relname_target: &String,
+        attribute: &String,
         op: i32,
-        value: &[char; ATTR_SIZE],
+        value: &String,
     ) -> Result<(), ErrorType> {
         Ok(())
     }
 
     pub fn select_attrlist_from_table_where(
-        relname_source: &[char; ATTR_SIZE],
-        relname_target: &[char; ATTR_SIZE],
+        relname_source: &String,
+        relname_target: &String,
         attr_count: i32,
         attr_list: *mut [c_char; ATTR_SIZE],
-        attribute: &[char; ATTR_SIZE],
+        attribute: &String,
         op: i32,
-        value: &[char; ATTR_SIZE],
+        value: &String,
     ) -> Result<(), ErrorType> {
         Ok(())
     }
 
     pub fn select_from_join_where(
-        relname_source_one: &[char; ATTR_SIZE],
-        relname_source_two: &[char; ATTR_SIZE],
-        relname_target: &[char; ATTR_SIZE],
-        join_attr_one: &[char; ATTR_SIZE],
-        join_attr_two: &[char; ATTR_SIZE],
+        relname_source_one: &String,
+        relname_source_two: &String,
+        relname_target: &String,
+        join_attr_one: &String,
+        join_attr_two: &String,
     ) -> Result<(), ErrorType> {
         Ok(())
     }
 
     pub fn select_attrlist_from_join_where(
-        relname_source_one: &[char; ATTR_SIZE],
-        relname_source_two: &[char; ATTR_SIZE],
-        relname_target: &[char; ATTR_SIZE],
-        join_attr_one: &[char; ATTR_SIZE],
-        join_attr_two: &[char; ATTR_SIZE],
+        relname_source_one: &String,
+        relname_source_two: &String,
+        relname_target: &String,
+        join_attr_one: &String,
+        join_attr_two: &String,
         attr_count: i32,
         attr_list: *mut [c_char; ATTR_SIZE],
     ) -> Result<(), ErrorType> {
