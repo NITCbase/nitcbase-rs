@@ -19,7 +19,6 @@ pub mod FrontendInterface {
         highlighter: MatchingBracketHighlighter,
         validator: MatchingBracketValidator,
         hinter: HistoryHinter,
-        colored_prompt: String,
     }
     impl Highlighter for MyHelper {
         fn highlight_prompt<'b, 's: 'b, 'p: 'b>(
@@ -28,7 +27,7 @@ pub mod FrontendInterface {
             default: bool,
         ) -> Cow<'b, str> {
             if default {
-                Borrowed(&self.colored_prompt)
+                Borrowed(prompt)
             } else {
                 Borrowed(prompt)
             }
@@ -70,7 +69,6 @@ pub mod FrontendInterface {
             completer: FilenameCompleter::new(),
             highlighter: MatchingBracketHighlighter::new(),
             hinter: HistoryHinter {},
-            colored_prompt: "".to_owned(),
             validator: MatchingBracketValidator::new(),
         };
 
@@ -81,10 +79,12 @@ pub mod FrontendInterface {
             Cmd::Insert(1, "\t".into()),
         );
 
+        let prompt: String = String::from("\x1b[1;32m#\x1b[0m");
         loop {
-            let readline = rl.readline("# ");
+            let readline = rl.readline(prompt.as_str());
             match readline {
                 Ok(line) => {
+                    println!("{}", line);
                     if !line.is_empty() {
                         rl.add_history_entry(line.clone())?;
                     }
