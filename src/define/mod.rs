@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
 use std::fmt;
 
 pub static DISK_PATH: &str = "../../Disk/disk"; // Path to disk

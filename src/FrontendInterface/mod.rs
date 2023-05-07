@@ -46,10 +46,10 @@ pub mod FrontendInterface {
             self.highlighter.highlight_char(line, pos)
         }
     }
-    pub fn handleFrontend(argc: usize, argv: &Vec<String>) -> rustyline::Result<i32> {
+    pub fn handleFrontend(argc: usize, argv: &Vec<&str>) -> rustyline::Result<i32> {
         let mut rh: RegexHandler = RegexHandler::new();
         if argc == 3 && argv[1] == "run" {
-            let run_command = "run ".to_owned() + argv[2].as_str();
+            let run_command = "run ".to_owned() + argv[2];
             let ret = rh.handle(&run_command);
             match ret {
                 Err(ErrorType::EXIT) => {
