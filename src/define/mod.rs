@@ -2,12 +2,12 @@
 #![allow(unused_variables)]
 use std::fmt;
 
-pub static DISK_PATH: &str = "../../Disk/disk"; // Path to disk
-pub static DISK_RUN_COPY_PATH: &str = "../../Disk/disk_run_copy"; // Path to run copy of the disk
-pub static FILES_PATH: &str = "../../Files/"; // Path to Files directory;;
-pub static INPUT_FILES_PATH: &str = "../../Files/Input_Files/"; // Path to Input_Files directory inside the Files directory
-pub static OUTPUT_FILES_PATH: &str = "../../Files/Output_Files/"; // Path to Output_Files directory inside the Files directory
-pub static BATCH_FILES_PATH: &str = "../../Files/Batch_Execution_Files/"; // Path to Batch_Execution_Files directory inside the Files directory
+pub static DISK_PATH: &str = "../Disk/disk"; // Path to disk
+pub static DISK_RUN_COPY_PATH: &str = "../Disk/disk_run_copy"; // Path to run copy of the disk
+pub static FILES_PATH: &str = "../Files/"; // Path to Files directory;;
+pub static INPUT_FILES_PATH: &str = "../Files/Input_Files/"; // Path to Input_Files directory inside the Files directory
+pub static OUTPUT_FILES_PATH: &str = "../Files/Output_Files/"; // Path to Output_Files directory inside the Files directory
+pub static BATCH_FILES_PATH: &str = "../Files/Batch_Execution_Files/"; // Path to Batch_Execution_Files directory inside the Files directory
 
 pub const BLOCK_SIZE: usize = 2048; // Size of Block in bytes
 pub const ATTR_SIZE: usize = 16; // Size of an attribute in bytes

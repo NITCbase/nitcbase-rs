@@ -10,7 +10,7 @@ mod RegexHandler;
 mod define;
 
 fn main() -> () {
-    Disk::Disk::new_disk().expect("Disk Error");
+    Disk::Disk::new_disk().expect("Disk Error::::");
     let args: Vec<String> = env::args().collect();
     let argc = args.len();
     let argv = args.iter().map(|arg| arg.as_str()).collect::<Vec<&str>>();
