@@ -102,6 +102,16 @@ impl RelCatFieldIndex {
         }
     }
 }
+pub struct RecId {
+    pub block: i32,
+    pub slot: i32,
+}
+
+/* An index is identified by its block number and index number */
+pub struct IndexId {
+    pub block: i32,
+    pub index: i32,
+}
 
 // Indexes for Attribute Catalog Attributes
 #[allow(non_camel_case_types)]

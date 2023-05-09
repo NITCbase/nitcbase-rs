@@ -663,3 +663,4 @@ pub mod RegexHandler {
         println!("exit \n\t-Exit the interface");
     }
 }
+pub use self::RegexHandler::*;

@@ -4,7 +4,7 @@ pub mod FrontendInterface {
     use std::borrow::Cow::{self, Borrowed, Owned};
 
     use crate::define::*;
-    use crate::RegexHandler::RegexHandler::RegexHandler;
+    use crate::RegexHandler::RegexHandler;
     use rustyline::completion::FilenameCompleter;
     use rustyline::error::ReadlineError;
     use rustyline::highlight::{Highlighter, MatchingBracketHighlighter};
@@ -46,7 +46,7 @@ pub mod FrontendInterface {
         }
     }
     pub fn handleFrontend(argc: usize, argv: &Vec<&str>) -> rustyline::Result<i32> {
-        let mut rh: RegexHandler = RegexHandler::new();
+        let mut rh: RegexHandler::RegexHandler = RegexHandler::RegexHandler::new();
         if argc == 3 && argv[1] == "run" {
             let run_command = "run ".to_owned() + argv[2];
             let ret = rh.handle(&run_command);
@@ -102,3 +102,4 @@ pub mod FrontendInterface {
         Ok(0)
     }
 }
+pub use self::FrontendInterface::*;
