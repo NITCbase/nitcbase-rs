@@ -12,6 +12,7 @@ mod Disk;
 mod Frontend;
 mod FrontendInterface;
 mod RegexHandler;
+mod Schema;
 mod define;
 
 use crate::Cache::Cache::OpenRelTable;
