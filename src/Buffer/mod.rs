@@ -7,7 +7,7 @@ use std::mem;
 use crate::define::*;
 use crate::Disk::*;
 
-struct HeadInfo {
+pub struct HeadInfo {
     blockType: i32,
     pblock: i32,
     lblock: i32,

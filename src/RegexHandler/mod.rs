@@ -177,7 +177,6 @@ pub mod RegexHandler {
         pub fn handle(&mut self, command: &String) -> Result<(), ErrorType> {
             for (test_command, handler) in self.handlers.iter() {
                 if test_command.is_match(&command) {
-                    println!("matched {}", test_command);
                     let caps = test_command.captures(command.as_str()).unwrap();
                     self.m.clear();
                     for i in 0..caps.len() {

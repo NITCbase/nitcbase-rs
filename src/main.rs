@@ -15,9 +15,7 @@ mod RegexHandler;
 mod Schema;
 mod define;
 
-use crate::Cache::Cache::OpenRelTable;
 fn main() -> () {
-    OpenRelTable::close_rel(5);
     Disk::new_disk().expect("Disk Error. Please  check ../Disk/disk file");
     let args: Vec<String> = env::args().collect();
     let argc = args.len();
